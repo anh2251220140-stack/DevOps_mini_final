@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
 const ENV_FILE_PATHS = [
   path.resolve(__dirname, '..', '.env'),
   path.resolve(__dirname, '..', '..', '.env'),
@@ -45,15 +46,29 @@ const normalizePort = (value, fallback) => {
 
 export const config = {
   port: normalizePort(process.env.PORT, 3000),
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  supabaseUrl: process.env.SUPABASE_URL || '',
-  supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-  supabaseTable: process.env.SUPABASE_TABLE || 'transactions',
-  supabaseTaskTable: process.env.SUPABASE_TASK_TABLE || 'tasks',
+
+  corsOrigin:
+    process.env.CORS_ORIGIN || 'http://localhost:5173',
+
+  supabaseUrl:
+    process.env.SUPABASE_URL || '',
+
+  supabaseAnonKey:
+    process.env.SUPABASE_ANON_KEY || '',
+
+  supabaseServiceRoleKey:
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+
+  supabaseTable:
+    process.env.SUPABASE_TABLE || 'transactions',
+
+  supabaseTaskTable:
+    process.env.SUPABASE_TASK_TABLE || 'tasks',
 }
 
-export const isSupabaseConfigured = Boolean(
-  config.supabaseUrl &&
-    (config.supabaseServiceRoleKey || config.supabaseAnonKey),
-)
+export const isSupabaseConfigured = () =>
+  Boolean(
+    config.supabaseUrl &&
+      (config.supabaseServiceRoleKey ||
+        config.supabaseAnonKey)
+  )
