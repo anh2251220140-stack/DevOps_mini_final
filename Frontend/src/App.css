@@ -1,0 +1,419 @@
+/* === CSS VARIABLES CHO LIGHT/DARK MODE === */
+:root {
+  --bg-app: #f4f7f6;
+  --text-main: #0f172a;
+  --panel-bg: #ffffff;
+  --line: rgba(148, 163, 184, 0.3);
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --muted: #64748b;
+  --input-bg: #ffffff;
+  --input-text: #0f172a;
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.4);
+  --sidebar-w: 260px;
+}
+
+.theme-dark {
+  --bg-app: #0f172a;
+  --text-main: #f8fffd;
+  --panel-bg: rgba(30, 41, 59, 0.95);
+  --line: rgba(148, 163, 184, 0.2);
+  --accent: #2dd4bf;
+  --accent-hover: #14b8a6;
+  --muted: #94a3b8;
+  --input-bg: #1e293b;
+  --input-text: #f8fffd;
+  --modal-bg: #1e293b;
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+}
+
+/* Kích hoạt mượt mà khi chuyển theme */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.4s ease, color 0.4s ease;
+  margin: 0;
+  font-family: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* =========================================
+   ADMIN LAYOUT CORE 
+   ========================================= */
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* SIDEBAR BÊN TRÁI */
+.admin-sidebar {
+  width: var(--sidebar-w);
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: background-color 0.4s ease;
+  z-index: 10;
+}
+
+.sidebar-brand {
+  padding: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sidebar-brand h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.sidebar-brand p {
+  margin: 5px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.sidebar-nav {
+  padding: 15px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  color: var(--text-main);
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-nav:hover {
+  background-color: rgba(15, 118, 110, 0.08);
+}
+
+.btn-nav.active {
+  background-color: rgba(15, 118, 110, 0.15);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.theme-toggle-btn {
+  width: 100%;
+  background: var(--line);
+  color: var(--text-main);
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* KHUNG NỘI DUNG BÊN PHẢI */
+.admin-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* HEADER TOP */
+.admin-header {
+  height: 64px;
+  background-color: var(--panel-bg);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+  transition: background-color 0.4s ease;
+}
+
+.header-info span {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-action {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 15px;
+  border-left: 1px solid var(--line);
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+/* NỘI DUNG CUỘN Ở GIỮA */
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* =========================================
+   THÀNH PHẦN BÊN TRONG (COMPONENTS)
+   ========================================= */
+
+/* Grid Tổng Quan */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.overview-card {
+  background: var(--panel-bg);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--line);
+  transition: transform 0.2s;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.card-icon {
+  font-size: 2rem;
+  background: rgba(15, 118, 110, 0.1);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.card-data span {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.card-data strong {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.card-data p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.overview-card--primary .card-icon {
+  background: var(--accent);
+  color: white;
+}
+
+.overview-card--primary strong {
+  color: var(--accent);
+}
+
+/* Content Grid chia Form & Filter */
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Các Panel (Form, Bộ lọc) */
+.admin-panel, .panel {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  border: 1px solid var(--line);
+  height: 100%;
+}
+
+.panel-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-header h2, .panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.panel-body {
+  padding: 20px;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-control, .filters select, .filters input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.form-control:focus, .filters select:focus, .filters input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-btn {
+  background-color: var(--accent);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.admin-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.expense-preview-inline {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: rgba(15, 118, 110, 0.05);
+  border: 1px dashed var(--accent);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expense-preview-inline strong {
+  color: var(--text-main);
+}
+
+.expense-preview-inline .amount-text {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+/* Thống kê - Component Panel cũ */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 15px;
+}
+
+.summary-card__main {
+  margin: 15px;
+}
+
+/* Section Giao Dịch Cuối Trang */
+.transactions-section {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  border: 1px solid var(--line);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+}
