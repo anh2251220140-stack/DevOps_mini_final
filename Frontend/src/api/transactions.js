@@ -38,7 +38,7 @@ const parseErrorMessage = async (response) => {
 
 export const fetchTransactions = async () => {
   try {
-    const response = await fetch(buildUrl('/transactions'))
+    const response = await fetch(buildUrl('api/transactions'))
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))
