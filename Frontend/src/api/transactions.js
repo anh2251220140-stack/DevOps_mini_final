@@ -20,17 +20,24 @@ const toFriendlyNetworkError = (error) => {
     )
   }
 
-  return error instanceof Error ? error : new Error('Đã xảy ra lỗi khi gọi API.')
+  return error instanceof Error
+    ? error
+    : new Error('Đã xảy ra lỗi khi gọi API.')
 }
 
 const parseErrorMessage = async (response) => {
   try {
     const payload = await response.json()
-    if (payload && typeof payload.message === 'string' && payload.message.trim()) {
+
+    if (
+      payload &&
+      typeof payload.message === 'string' &&
+      payload.message.trim()
+    ) {
       return payload.message
     }
   } catch {
-    // ignore JSON parse errors and fall back to a generic message
+    // ignore JSON parse errors
   }
 
   return `Yêu cầu API thất bại với mã ${response.status}.`
@@ -38,13 +45,16 @@ const parseErrorMessage = async (response) => {
 
 export const fetchTransactions = async () => {
   try {
-    const response = await fetch(buildUrl('api/transactions'))
+    const response = await fetch(
+      buildUrl('/api/transactions')
+    )
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))
     }
 
     const payload = await response.json()
+
     return Array.isArray(payload) ? payload : []
   } catch (error) {
     throw toFriendlyNetworkError(error)
@@ -53,13 +63,16 @@ export const fetchTransactions = async () => {
 
 export const addTransaction = async (transaction) => {
   try {
-    const response = await fetch(buildUrl('/transactions'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      buildUrl('/api/transactions'),
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transaction),
       },
-      body: JSON.stringify(transaction),
-    })
+    )
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))
