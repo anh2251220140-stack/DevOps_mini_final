@@ -1,18 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "Frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "Backend/api/index.js",
-      "use": "@vercel/node"
+  "buildCommand": "cd Frontend && npm install && npm run build",
+  "outputDirectory": "Frontend/dist",
+  "functions": {
+    "Backend/api/index.js": {
+      "runtime": "nodejs24.x"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -27,8 +21,6 @@
       "dest": "/Frontend/dist/$1"
     }
   ],
-  "public": true,
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
