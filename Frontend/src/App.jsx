@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ExpenseForm from './components/ExpenseForm'
 import TimeFilterPanel from './components/TimeFilterPanel'
-import TransactionsSidebar from './components/TransactionsSidebar'
+import TransactionsTable from './components/TransactionsTable'
 import { defaultForm, initialTransactions } from './constants/transactions'
 import { formatCurrency } from './utils/formatCurrency'
 import { isInFilterRange } from './utils/transactionFilters'
@@ -181,9 +181,18 @@ function App() {
   const [dayFilter, setDayFilter] = useState(new Date().toISOString().slice(0, 10))
   const [monthFilter, setMonthFilter] = useState(new Date().toISOString().slice(0, 7))
   const [rangeFilter, setRangeFilter] = useState({ from: '', to: '' })
+  const [showTimeFilterDetails, setShowTimeFilterDetails] = useState(false)
 
   // --- ĐIỀU HƯỚNG TABS ---
   const [activeTab, setActiveTab] = useState('overview') 
+
+  const openFilteredHistory = () => {
+    setActiveTab('history')
+  }
+
+  const openTimeFilterDetails = () => {
+    setShowTimeFilterDetails(true)
+  }
 
   // --- LOGIC HÀM ---
   const handleInputChange = (e) => {
@@ -370,12 +379,13 @@ function App() {
                     setDayFilter={setDayFilter}
                     setMonthFilter={setMonthFilter}
                     setRangeFilter={setRangeFilter}
+                    onOpenFilteredList={openFilteredHistory}
                   />
                 </div>
               </div>
 
               <div className="transactions-section">
-                <TransactionsSidebar transactions={filteredTransactions} onReload={() => window.location.reload()} />
+                <TransactionsTable transactions={filteredTransactions} onReload={() => window.location.reload()} />
               </div>
             </>
           )}
@@ -396,26 +406,38 @@ function App() {
 
           {/* TAB 3: BỘ LỌC THỜI GIAN */}
           {activeTab === 'time_filter' && (
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <TimeFilterPanel
-                filterType={filterType}
-                dayFilter={dayFilter}
-                monthFilter={monthFilter}
-                rangeFilter={rangeFilter}
-                totalAmount={totalAmount}
-                filteredCount={filteredTransactions.length}
-                setFilterType={setFilterType}
-                setDayFilter={setDayFilter}
-                setMonthFilter={setMonthFilter}
-                setRangeFilter={setRangeFilter}
-              />
-            </div>
+            <>
+              <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <TimeFilterPanel
+                  filterType={filterType}
+                  dayFilter={dayFilter}
+                  monthFilter={monthFilter}
+                  rangeFilter={rangeFilter}
+                  totalAmount={totalAmount}
+                  filteredCount={filteredTransactions.length}
+                  setFilterType={setFilterType}
+                  setDayFilter={setDayFilter}
+                  setMonthFilter={setMonthFilter}
+                  setRangeFilter={setRangeFilter}
+                  onOpenFilteredList={openTimeFilterDetails}
+                />
+              </div>
+
+              {showTimeFilterDetails && (
+                <div className="transactions-section" style={{ marginTop: '24px' }}>
+                  <TransactionsTable
+                    transactions={filteredTransactions}
+                    onReload={() => window.location.reload()}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {/* TAB 4: LỊCH SỬ GIAO DỊCH */}
           {activeTab === 'history' && (
             <div className="transactions-section">
-              <TransactionsSidebar transactions={filteredTransactions} onReload={() => window.location.reload()} />
+              <TransactionsTable transactions={filteredTransactions} onReload={() => window.location.reload()} />
             </div>
           )}
 

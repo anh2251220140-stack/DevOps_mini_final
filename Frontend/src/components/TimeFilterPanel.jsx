@@ -26,6 +26,7 @@ export default function TimeFilterPanel({
   onOpenFilteredList, 
 }) {
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const hasTransactions = filteredCount > 0
 
   return (
     <section className="panel filter-animated-container">
@@ -190,11 +191,32 @@ export default function TimeFilterPanel({
               {formatCurrency(totalAmount)}
             </strong>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', background: 'var(--line)', padding: '4px 10px', borderRadius: '6px', fontWeight: '600' }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (hasTransactions && onOpenFilteredList) onOpenFilteredList()
+                }}
+                disabled={!hasTransactions}
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--text-main)',
+                  background: 'var(--line)',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: hasTransactions ? 'pointer' : 'not-allowed',
+                  opacity: hasTransactions ? 1 : 0.55,
+                }}
+              >
                 {filteredCount} Giao dịch
-              </span>
+              </button>
               <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>được tìm thấy</span>
             </div>
+            <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
+              Nhấn vào nút giao dịch để hiển thị form chi tiết theo bộ lọc hiện tại
+            </span>
           </div>
           
           <div style={{ 
@@ -244,11 +266,14 @@ export default function TimeFilterPanel({
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   <span style={{ color: 'var(--accent)', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
-                    Tổng tiền chi tiêu
+                    Mở lịch sử đã lọc
                   </span>
                   <strong style={{ fontSize: '2.2rem', color: 'var(--accent)', display: 'block', marginTop: '8px' }}>
                     {formatCurrency(totalAmount)}
                   </strong>
+                  <span style={{ display: 'block', marginTop: '10px', color: 'var(--muted)', fontSize: '0.85rem' }}>
+                    Chuyển sang màn hình lịch sử để xem form chi tiết
+                  </span>
                 </div>
 
                 <div style={{ background: 'var(--line)', padding: '15px', borderRadius: '12px' }}>
