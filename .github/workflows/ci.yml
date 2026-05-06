@@ -71,3 +71,24 @@ jobs:
       - name: Build frontend
         working-directory: Frontend
         run: npm run build
+
+      - name: Validate Vercel configuration
+        run: |
+          if [ ! -f "vercel.json" ]; then
+            echo "❌ vercel.json not found!"
+            exit 1
+          fi
+          echo "✅ vercel.json is present"
+
+      - name: Validate backend API handler
+        working-directory: Backend
+        run: node --check api/index.js
+
+      - name: Verify build outputs
+        run: |
+          if [ ! -d "Frontend/dist" ]; then
+            echo "❌ Frontend dist directory not found!"
+            exit 1
+          fi
+          echo "✅ Frontend build output verified"
+          ls -lh Frontend/dist/
