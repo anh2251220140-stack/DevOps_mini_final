@@ -5,7 +5,6 @@ const amountOptions = [10000, 20000, 50000, 100000, 200000, 500000, 1000000]
 
 export default function ExpenseForm({
   formData,
-  currentTime,
   isSubmitting,
   submitError,
   submitSuccess,

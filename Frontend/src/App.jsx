@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ExpenseForm from './components/ExpenseForm'
 import TimeFilterPanel from './components/TimeFilterPanel'
 import TransactionsSidebar from './components/TransactionsSidebar'
@@ -36,6 +36,7 @@ const HealthCheckForm = () => {
           setErrorMessage(`Lỗi từ server: ${res.status} ${res.statusText}`)
         }
       } catch (error) {
+        console.error('Health check failed:', error)
         setStatus('error')
         setErrorMessage('Không thể kết nối đến Supabase (Backend từ chối kết nối hoặc không hoạt động)')
       }
@@ -174,7 +175,6 @@ function App() {
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState('')
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
 
   // Bộ lọc
   const [filterType, setFilterType] = useState('all')
@@ -351,7 +351,6 @@ function App() {
                 <div className="content-col-main">
                   <ExpenseForm
                     formData={formData}
-                    currentTime={currentTime}
                     isSubmitting={isSubmitting}
                     submitError={submitError}
                     submitSuccess={submitSuccess}
@@ -386,7 +385,6 @@ function App() {
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               <ExpenseForm
                 formData={formData}
-                currentTime={currentTime}
                 isSubmitting={isSubmitting}
                 submitError={submitError}
                 submitSuccess={submitSuccess}
