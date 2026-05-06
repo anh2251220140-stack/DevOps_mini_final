@@ -12,14 +12,15 @@
       "dest": "/Backend/api/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/Frontend/dist/$1"
-    }
-  ],
-  "rewrites": [
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "dest": "/Frontend/dist/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/Frontend/dist/index.html"
     }
   ]
 }
