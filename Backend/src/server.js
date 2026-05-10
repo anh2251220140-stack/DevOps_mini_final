@@ -15,6 +15,14 @@ const jsonHeaders = {
   'Content-Type': 'application/json; charset=utf-8',
 }
 
+class ApiError extends Error {
+  constructor(statusCode, message) {
+    super(message)
+    this.name = 'ApiError'
+    this.statusCode = statusCode
+  }
+}
+
 const createCorsHeaders = () => ({
   'Access-Control-Allow-Origin': config.corsOrigin,
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
@@ -52,7 +60,7 @@ const readJsonBody = async (request) =>
       try {
         resolve(JSON.parse(body))
       } catch {
-        reject(new Error('Body JSON khong hop le.'))
+        reject(new ApiError(400, 'Body JSON khong hop le.'))
       }
     })
 
@@ -69,15 +77,15 @@ const validateTransactionPayload = (payload) => {
   const amount = Number(payload.amount)
 
   if (!title) {
-    throw new Error('Truong title la bat buoc.')
+    throw new ApiError(400, 'Truong title la bat buoc.')
   }
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error('Truong amount phai la so lon hon 0.')
+    throw new ApiError(400, 'Truong amount phai la so lon hon 0.')
   }
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error('Truong date phai co dinh dang YYYY-MM-DD.')
+    throw new ApiError(400, 'Truong date phai co dinh dang YYYY-MM-DD.')
   }
 
   return {
@@ -90,11 +98,11 @@ const validateTransactionPayload = (payload) => {
 
 const handleHealthCheck = async (response) => {
   const supabase = {
-    configured: isSupabaseConfigured,
+    configured: isSupabaseConfigured(),
     connected: false,
   }
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured()) {
     try {
       await checkSupabaseConnection()
       supabase.connected = true
@@ -173,13 +181,14 @@ const server = http.createServer(async (request, response) => {
         ? error.message
         : 'Da xay ra loi khong xac dinh.'
 
-    sendJson(response, 500, {
+    const statusCode = error instanceof ApiError ? error.statusCode : 500
+    sendJson(response, statusCode, {
       message,
       requestId,
     })
   }
 })
-
+// Backend service updated
 server.listen(config.port, () => {
   logInfo('Backend server started.', {
     port: config.port,

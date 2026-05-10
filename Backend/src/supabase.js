@@ -12,7 +12,7 @@ const createSupabaseHeaders = (extraHeaders = {}) => ({
 })
 
 const ensureSupabaseConfigured = () => {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured()) {
     throw new Error(
       'Chua cau hinh SUPABASE_URL va SUPABASE_ANON_KEY/SUPABASE_SERVICE_ROLE_KEY trong Backend/.env.',
     )
