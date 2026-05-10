@@ -10,7 +10,16 @@ const normalizeBaseUrl = () => {
 
 const buildUrl = (path) => {
   const base = normalizeBaseUrl()
-  return `${base}${path.startsWith('/') ? '' : '/'}${path}`
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+
+  // Support both styles:
+  // - VITE_API_URL=http://localhost:3000
+  // - VITE_API_URL=http://localhost:3000/api
+  if (base.endsWith('/api') && normalizedPath.startsWith('/api/')) {
+    return `${base}${normalizedPath.slice(4)}`
+  }
+
+  return `${base}${normalizedPath}`
 }
 
 const toFriendlyNetworkError = (error) => {
@@ -60,7 +69,7 @@ export const fetchTransactions = async () => {
     throw toFriendlyNetworkError(error)
   }
 }
-
+// Frontend service updated
 export const addTransaction = async (transaction) => {
   try {
     const response = await fetch(
