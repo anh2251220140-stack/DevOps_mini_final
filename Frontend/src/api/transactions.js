@@ -1,11 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
+const getRuntimeOrigin = () => {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return window.location?.origin || ''
+}
+
 const normalizeBaseUrl = () => {
-  if (!API_BASE_URL) {
+  const runtimeBaseUrl = API_BASE_URL || getRuntimeOrigin()
+
+  if (!runtimeBaseUrl) {
     throw new Error('Thiếu VITE_API_URL trong file .env.')
   }
 
-  return API_BASE_URL.replace(/\/+$/g, '')
+  return runtimeBaseUrl.replace(/\/+$/g, '')
 }
 
 const buildUrl = (path) => {
@@ -54,9 +64,7 @@ const parseErrorMessage = async (response) => {
 
 export const fetchTransactions = async () => {
   try {
-    const response = await fetch(
-      buildUrl('/api/transactions')
-    )
+    const response = await fetch(buildUrl('/api/transactions'))
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))
@@ -69,19 +77,16 @@ export const fetchTransactions = async () => {
     throw toFriendlyNetworkError(error)
   }
 }
-// Frontend service updated
+
 export const addTransaction = async (transaction) => {
   try {
-    const response = await fetch(
-      buildUrl('/api/transactions'),
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transaction),
+    const response = await fetch(buildUrl('/api/transactions'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+      body: JSON.stringify(transaction),
+    })
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))

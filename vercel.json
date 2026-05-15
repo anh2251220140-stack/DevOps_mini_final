@@ -5,11 +5,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/Backend/api/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/health",
-      "dest": "/Backend/api/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",

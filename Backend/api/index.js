@@ -12,6 +12,20 @@ const jsonHeaders = {
   'Content-Type': 'application/json; charset=utf-8',
 }
 
+const getRequestPath = (request) => {
+  const rawUrl = request.url || '/'
+
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    try {
+      return new URL(rawUrl).pathname
+    } catch {
+      return rawUrl
+    }
+  }
+
+  return rawUrl.split('?')[0]
+}
+
 const createCorsHeaders = (origin) => ({
   'Access-Control-Allow-Origin': origin || config.corsOrigin,
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
@@ -71,19 +85,36 @@ const parseAmount = (input) => {
 }
 
 export default async function handler(request, response) {
+  const requestPath = getRequestPath(request)
+
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return sendJson(response, 200, {}, request.headers.origin)
   }
 
   // Health check endpoint
-  if (request.url === '/health' && request.method === 'GET') {
+  if (
+    (requestPath === '/health' || requestPath === '/api/health') &&
+    request.method === 'GET'
+  ) {
     logInfo('Health check requested')
-    return sendJson(response, 200, { status: 'OK' }, request.headers.origin)
+    return sendJson(
+      response,
+      200,
+      {
+        status: 'ok',
+        service: 'expense-manager-backend',
+        supabase: {
+          configured: isSupabaseConfigured(),
+          connected: await checkSupabaseConnection(),
+        },
+      },
+      request.headers.origin,
+    )
   }
 
   // API endpoints
-  if (request.url?.startsWith('/api/')) {
+  if (requestPath.startsWith('/api/')) {
     if (!isSupabaseConfigured()) {
       logError('Supabase not configured')
       return sendJson(
@@ -95,7 +126,7 @@ export default async function handler(request, response) {
     }
 
     // GET /api/transactions
-    if (request.url === '/api/transactions' && request.method === 'GET') {
+    if (requestPath === '/api/transactions' && request.method === 'GET') {
       try {
         const transactions = await fetchTransactionsFromSupabase()
         return sendJson(response, 200, transactions, request.headers.origin)
@@ -111,7 +142,7 @@ export default async function handler(request, response) {
     }
 
     // POST /api/transactions
-    if (request.url === '/api/transactions' && request.method === 'POST') {
+    if (requestPath === '/api/transactions' && request.method === 'POST') {
       try {
         const body = await readJsonBody(request)
         const { title, amount, category, date } = body
@@ -165,7 +196,7 @@ export default async function handler(request, response) {
     }
 
     // GET /api/tasks
-    if (request.url === '/api/tasks' && request.method === 'GET') {
+    if (requestPath === '/api/tasks' && request.method === 'GET') {
       try {
         const tasks = await fetchTasksFromSupabase()
         return sendJson(response, 200, tasks, request.headers.origin)
@@ -181,7 +212,7 @@ export default async function handler(request, response) {
     }
 
     // POST /api/tasks
-    if (request.url === '/api/tasks' && request.method === 'POST') {
+    if (requestPath === '/api/tasks' && request.method === 'POST') {
       try {
         const body = await readJsonBody(request)
         const { title, description } = body

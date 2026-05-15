@@ -12,7 +12,9 @@ import './App.css'
 // COMPONENT: HEALTH CHECK FORM (Chỉ tập trung check Backend)
 // ============================================================================
 const HealthCheckForm = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || ''
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '')
   const [status, setStatus] = useState('loading') // loading | success | error
   const [errorMessage, setErrorMessage] = useState('')
 
