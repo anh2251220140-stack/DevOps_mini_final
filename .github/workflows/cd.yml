@@ -1,14 +1,11 @@
 name: CD
 
 on:
-  workflow_dispatch:
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
+  push:
     branches:
       - main
+
+  workflow_dispatch:
 
 concurrency:
   group: production-deploy
@@ -17,17 +14,16 @@ concurrency:
 jobs:
   deploy:
     name: Deploy To Vercel
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: production
+
     permissions:
       contents: read
+
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -36,14 +32,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Validate Required Secrets
-        run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "Missing one or more required Vercel secrets."
-            echo "Required: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID"
-            exit 1
-          fi
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
