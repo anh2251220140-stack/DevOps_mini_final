@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 const getRuntimeOrigin = () => {
   if (typeof window === 'undefined') {
@@ -8,18 +8,32 @@ const getRuntimeOrigin = () => {
   return window.location?.origin || ''
 }
 
-const normalizeBaseUrl = () => {
-  const runtimeBaseUrl = API_BASE_URL || getRuntimeOrigin()
-
-  if (!runtimeBaseUrl) {
-    throw new Error('Thiếu VITE_API_URL trong file .env.')
+const isLocalhostUrl = (value) => {
+  try {
+    const url = new URL(value)
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname)
+  } catch {
+    return false
   }
-
-  return runtimeBaseUrl.replace(/\/+$/g, '')
 }
 
-const buildUrl = (path) => {
-  const base = normalizeBaseUrl()
+const isRuntimeLocalhost = () => {
+  const runtimeOrigin = getRuntimeOrigin()
+  return runtimeOrigin ? isLocalhostUrl(runtimeOrigin) : false
+}
+
+export const normalizeApiBaseUrl = () => {
+  const configuredBaseUrl = API_BASE_URL.trim().replace(/\/+$/g, '')
+
+  if (configuredBaseUrl && isLocalhostUrl(configuredBaseUrl) && !isRuntimeLocalhost()) {
+    return ''
+  }
+
+  return configuredBaseUrl
+}
+
+export const buildApiUrl = (path) => {
+  const base = normalizeApiBaseUrl()
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
 
   // Support both styles:
@@ -29,19 +43,19 @@ const buildUrl = (path) => {
     return `${base}${normalizedPath.slice(4)}`
   }
 
-  return `${base}${normalizedPath}`
+  return base ? `${base}${normalizedPath}` : normalizedPath
 }
 
 const toFriendlyNetworkError = (error) => {
   if (error instanceof TypeError) {
     return new Error(
-      'Không thể kết nối backend. Kiểm tra VITE_API_URL, backend đang chạy và CORS.',
+      'Khong the ket noi backend. Kiem tra backend dang chay va cau hinh CORS.',
     )
   }
 
   return error instanceof Error
     ? error
-    : new Error('Đã xảy ra lỗi khi gọi API.')
+    : new Error('Da xay ra loi khi goi API.')
 }
 
 const parseErrorMessage = async (response) => {
@@ -59,12 +73,12 @@ const parseErrorMessage = async (response) => {
     // ignore JSON parse errors
   }
 
-  return `Yêu cầu API thất bại với mã ${response.status}.`
+  return `Yeu cau API that bai voi ma ${response.status}.`
 }
 
 export const fetchTransactions = async () => {
   try {
-    const response = await fetch(buildUrl('/api/transactions'))
+    const response = await fetch(buildApiUrl('/api/transactions'))
 
     if (!response.ok) {
       throw new Error(await parseErrorMessage(response))
@@ -80,7 +94,7 @@ export const fetchTransactions = async () => {
 
 export const addTransaction = async (transaction) => {
   try {
-    const response = await fetch(buildUrl('/api/transactions'), {
+    const response = await fetch(buildApiUrl('/api/transactions'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

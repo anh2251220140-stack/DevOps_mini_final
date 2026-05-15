@@ -6,7 +6,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const ENV_FILE_PATHS = [
+  path.resolve(__dirname, '..', '.env.local'),
   path.resolve(__dirname, '..', '.env'),
+  path.resolve(__dirname, '..', '..', '.env.local'),
   path.resolve(__dirname, '..', '..', '.env'),
 ]
 
@@ -49,6 +51,11 @@ export const config = {
 
   corsOrigin:
     process.env.CORS_ORIGIN || 'http://localhost:5173',
+
+  corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 
   supabaseUrl:
     process.env.SUPABASE_URL || '',

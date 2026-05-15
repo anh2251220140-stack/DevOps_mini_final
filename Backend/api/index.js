@@ -26,8 +26,36 @@ const getRequestPath = (request) => {
   return rawUrl.split('?')[0]
 }
 
+const getAllowedCorsOrigin = (requestOrigin) => {
+  if (config.corsOrigins.includes('*')) {
+    return '*'
+  }
+
+  if (requestOrigin && config.corsOrigins.includes(requestOrigin)) {
+    return requestOrigin
+  }
+
+  if (requestOrigin) {
+    try {
+      const { hostname } = new URL(requestOrigin)
+
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.endsWith('.vercel.app')
+      ) {
+        return requestOrigin
+      }
+    } catch {
+      // Fall back to configured origin below.
+    }
+  }
+
+  return config.corsOrigins[0] || config.corsOrigin
+}
+
 const createCorsHeaders = (origin) => ({
-  'Access-Control-Allow-Origin': origin || config.corsOrigin,
+  'Access-Control-Allow-Origin': getAllowedCorsOrigin(origin),
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 })
@@ -84,46 +112,63 @@ const parseAmount = (input) => {
   return Number.isFinite(amount) && amount > 0 ? amount : null
 }
 
+const getErrorMessage = (error, fallback) =>
+  error instanceof Error && error.message ? error.message : fallback
+
 export default async function handler(request, response) {
-  const requestPath = getRequestPath(request)
+  try {
+    const requestPath = getRequestPath(request)
 
-  // Handle CORS preflight
-  if (request.method === 'OPTIONS') {
-    return sendJson(response, 200, {}, request.headers.origin)
-  }
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return sendJson(response, 200, {}, request.headers.origin)
+    }
 
-  // Health check endpoint
-  if (
-    (requestPath === '/health' || requestPath === '/api/health') &&
-    request.method === 'GET'
-  ) {
-    logInfo('Health check requested')
-    return sendJson(
-      response,
-      200,
-      {
-        status: 'ok',
-        service: 'expense-manager-backend',
-        supabase: {
-          configured: isSupabaseConfigured(),
-          connected: await checkSupabaseConnection(),
-        },
-      },
-      request.headers.origin,
-    )
-  }
+    // Health check endpoint
+    if (
+      (requestPath === '/health' || requestPath === '/api/health') &&
+      request.method === 'GET'
+    ) {
+      logInfo('Health check requested')
+      const supabase = {
+        configured: isSupabaseConfigured(),
+        connected: false,
+        error: null,
+      }
 
-  // API endpoints
-  if (requestPath.startsWith('/api/')) {
-    if (!isSupabaseConfigured()) {
-      logError('Supabase not configured')
+      if (supabase.configured) {
+        try {
+          await checkSupabaseConnection()
+          supabase.connected = true
+        } catch (error) {
+          supabase.error = getErrorMessage(error, 'Supabase health check failed')
+          logError('Supabase health check failed', error)
+        }
+      }
+
       return sendJson(
         response,
-        503,
-        { message: 'Service unavailable: Supabase not configured' },
-        request.headers.origin
+        200,
+        {
+          status: 'ok',
+          service: 'expense-manager-backend',
+          supabase,
+        },
+        request.headers.origin,
       )
     }
+
+  // API endpoints
+    if (requestPath.startsWith('/api/')) {
+      if (!isSupabaseConfigured()) {
+        logError('Supabase not configured')
+        return sendJson(
+          response,
+          503,
+          { message: 'Service unavailable: Supabase not configured' },
+          request.headers.origin
+        )
+      }
 
     // GET /api/transactions
     if (requestPath === '/api/transactions' && request.method === 'GET') {
@@ -135,7 +180,7 @@ export default async function handler(request, response) {
         return sendJson(
           response,
           500,
-          { message: 'Failed to fetch transactions' },
+          { message: getErrorMessage(error, 'Failed to fetch transactions') },
           request.headers.origin
         )
       }
@@ -189,7 +234,7 @@ export default async function handler(request, response) {
         return sendJson(
           response,
           500,
-          { message: 'Failed to create transaction' },
+          { message: getErrorMessage(error, 'Failed to create transaction') },
           request.headers.origin
         )
       }
@@ -205,7 +250,7 @@ export default async function handler(request, response) {
         return sendJson(
           response,
           500,
-          { message: 'Failed to fetch tasks' },
+          { message: getErrorMessage(error, 'Failed to fetch tasks') },
           request.headers.origin
         )
       }
@@ -237,18 +282,27 @@ export default async function handler(request, response) {
         return sendJson(
           response,
           500,
-          { message: 'Failed to create task' },
+          { message: getErrorMessage(error, 'Failed to create task') },
           request.headers.origin
         )
       }
     }
-  }
+    }
 
-  // Not found
-  return sendJson(
-    response,
-    404,
-    { message: 'Route not found' },
-    request.headers.origin
-  )
+    // Not found
+    return sendJson(
+      response,
+      404,
+      { message: 'Route not found' },
+      request.headers.origin
+    )
+  } catch (error) {
+    logError('Unhandled Vercel API error', error)
+    return sendJson(
+      response,
+      500,
+      { message: getErrorMessage(error, 'Unhandled Vercel API error') },
+      request.headers.origin
+    )
+  }
 }

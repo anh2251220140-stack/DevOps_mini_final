@@ -23,24 +23,52 @@ class ApiError extends Error {
   }
 }
 
-const createCorsHeaders = () => ({
-  'Access-Control-Allow-Origin': config.corsOrigin,
+const getAllowedCorsOrigin = (requestOrigin) => {
+  if (config.corsOrigins.includes('*')) {
+    return '*'
+  }
+
+  if (requestOrigin && config.corsOrigins.includes(requestOrigin)) {
+    return requestOrigin
+  }
+
+  if (requestOrigin) {
+    try {
+      const { hostname } = new URL(requestOrigin)
+
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.endsWith('.vercel.app')
+      ) {
+        return requestOrigin
+      }
+    } catch {
+      // Fall back to configured origin below.
+    }
+  }
+
+  return config.corsOrigins[0] || config.corsOrigin
+}
+
+const createCorsHeaders = (requestOrigin) => ({
+  'Access-Control-Allow-Origin': getAllowedCorsOrigin(requestOrigin),
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 })
 
-const sendJson = (response, statusCode, payload) => {
+const sendJson = (response, statusCode, payload, requestOrigin) => {
   response.writeHead(statusCode, {
     ...jsonHeaders,
-    ...createCorsHeaders(),
+    ...createCorsHeaders(requestOrigin),
   })
   response.end(JSON.stringify(payload))
 }
 
-const notFound = (response) => {
+const notFound = (response, requestOrigin) => {
   sendJson(response, 404, {
     message: 'Route khong ton tai.',
-  })
+  }, requestOrigin)
 }
 
 const readJsonBody = async (request) =>
@@ -96,7 +124,7 @@ const validateTransactionPayload = (payload) => {
   }
 }
 
-const handleHealthCheck = async (response) => {
+const handleHealthCheck = async (response, requestOrigin) => {
   const supabase = {
     configured: isSupabaseConfigured(),
     connected: false,
@@ -116,34 +144,35 @@ const handleHealthCheck = async (response) => {
     service: 'expense-manager-backend',
     timestamp: new Date().toISOString(),
     supabase,
-  })
+  }, requestOrigin)
 }
 
 const server = http.createServer(async (request, response) => {
   const requestId = randomUUID()
   const requestUrl = new URL(request.url || '/', `http://${request.headers.host}`)
+  const requestOrigin = request.headers.origin
 
   if (request.method === 'OPTIONS') {
-    response.writeHead(204, createCorsHeaders())
+    response.writeHead(204, createCorsHeaders(requestOrigin))
     response.end()
     return
   }
 
   try {
     if (request.method === 'GET' && requestUrl.pathname === '/api/health') {
-      await handleHealthCheck(response)
+      await handleHealthCheck(response, requestOrigin)
       return
     }
 
     if (request.method === 'GET' && requestUrl.pathname === '/api/transactions') {
       const transactions = await fetchTransactionsFromSupabase()
-      sendJson(response, 200, transactions)
+      sendJson(response, 200, transactions, requestOrigin)
       return
     }
 
     if (request.method === 'GET' && requestUrl.pathname === '/api/tasks') {
       const tasks = await fetchTasksFromSupabase()
-      sendJson(response, 200, tasks)
+      sendJson(response, 200, tasks, requestOrigin)
       return
     }
 
@@ -164,11 +193,11 @@ const server = http.createServer(async (request, response) => {
         })
       }
 
-      sendJson(response, 201, createdTransaction)
+      sendJson(response, 201, createdTransaction, requestOrigin)
       return
     }
 
-    notFound(response)
+    notFound(response, requestOrigin)
   } catch (error) {
     logError('API request failed.', error, {
       requestId,
@@ -185,7 +214,7 @@ const server = http.createServer(async (request, response) => {
     sendJson(response, statusCode, {
       message,
       requestId,
-    })
+    }, requestOrigin)
   }
 })
 // Backend service updated

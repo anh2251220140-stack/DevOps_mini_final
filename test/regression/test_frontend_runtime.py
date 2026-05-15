@@ -18,5 +18,5 @@ def test_frontend_page_references_javascript_bundle(frontend_base_url: str) -> N
     response = request_or_fail("GET", frontend_base_url)
 
     assert (
-        'src="/src/main.jsx"' in response.text or "assets/index-" in response.text
+        'src="/src/main.jsx' in response.text or "assets/index-" in response.text
     ), "Frontend không nạp main entrypoint, trang có thể đang bị hỏng."

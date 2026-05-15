@@ -339,7 +339,12 @@ export default function TransactionsTable({
           </strong>
         </div>
 
-        {!listLoading && !listError && displayedTransactions.length === 0 ? (
+        {listLoading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '10px', opacity: 0.5 }}>...</div>
+            <p>Dang tai du lieu giao dich tu Supabase.</p>
+          </div>
+        ) : !listError && displayedTransactions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '10px', opacity: 0.5 }}>📂</div>
             <p>Chưa có dữ liệu giao dịch nào.</p>

@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import ExpenseForm from './components/ExpenseForm'
 import TimeFilterPanel from './components/TimeFilterPanel'
 import TransactionsTable from './components/TransactionsTable'
-import { defaultForm, initialTransactions } from './constants/transactions'
+import { defaultForm } from './constants/transactions'
 import { formatCurrency } from './utils/formatCurrency'
 import { isInFilterRange } from './utils/transactionFilters'
-import { fetchTransactions, addTransaction } from './api/transactions'
+import { fetchTransactions, addTransaction, buildApiUrl, normalizeApiBaseUrl } from './api/transactions'
 import './App.css'
 
 // ============================================================================
@@ -13,7 +13,7 @@ import './App.css'
 // ============================================================================
 const HealthCheckForm = () => {
   const apiUrl =
-    import.meta.env.VITE_API_URL ||
+    normalizeApiBaseUrl() ||
     (typeof window !== 'undefined' ? window.location.origin : '')
   const [status, setStatus] = useState('loading') // loading | success | error
   const [errorMessage, setErrorMessage] = useState('')
@@ -28,7 +28,7 @@ const HealthCheckForm = () => {
       }
 
       try {
-        const healthUrl = `${apiUrl.replace(/\/+$/, '')}/health`
+        const healthUrl = buildApiUrl('/api/health')
         const res = await fetch(healthUrl)
         
         if (res.ok) {
@@ -171,7 +171,10 @@ const HealthCheckForm = () => {
 // ============================================================================
 function App() {
   // --- STATES DỮ LIỆU ---
-  const [transactions, setTransactions] = useState(initialTransactions)
+  const [transactions, setTransactions] = useState([])
+  const [listLoading, setListLoading] = useState(true)
+  const [listError, setListError] = useState('')
+  const [listNotice, setListNotice] = useState('')
   const [formData, setFormData] = useState(defaultForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -194,6 +197,28 @@ function App() {
 
   const openTimeFilterDetails = () => {
     setShowTimeFilterDetails(true)
+  }
+
+  const loadTransactions = async () => {
+    await Promise.resolve()
+    setListLoading(true)
+    setListError('')
+    setListNotice('')
+
+    try {
+      const data = await fetchTransactions()
+      setTransactions(Array.isArray(data) ? data : [])
+      setListNotice('Da tai du lieu moi nhat tu Supabase.')
+    } catch (error) {
+      setTransactions([])
+      setListError(
+        error instanceof Error
+          ? error.message
+          : 'Khong the tai du lieu giao dich tu Supabase.',
+      )
+    } finally {
+      setListLoading(false)
+    }
   }
 
   // --- LOGIC HÀM ---
@@ -239,16 +264,11 @@ function App() {
   }, [filteredTransactions])
 
   useEffect(() => {
-    const loadTransactions = async () => {
-      try {
-        const data = await fetchTransactions()
-        setTransactions(Array.isArray(data) ? data : [])
-      } catch (error) {
-        console.warn('Không thể tải dữ liệu giao dịch:', error)
-      }
-    }
+    const timerId = window.setTimeout(() => {
+      loadTransactions()
+    }, 0)
 
-    loadTransactions()
+    return () => window.clearTimeout(timerId)
   }, [])
 
   const grandTotalAmount = useMemo(() => {
@@ -387,7 +407,13 @@ function App() {
               </div>
 
               <div className="transactions-section">
-                <TransactionsTable transactions={filteredTransactions} onReload={() => window.location.reload()} />
+                <TransactionsTable
+                  listLoading={listLoading}
+                  listError={listError}
+                  listNotice={listNotice}
+                  transactions={filteredTransactions}
+                  onReload={loadTransactions}
+                />
               </div>
             </>
           )}
@@ -428,8 +454,11 @@ function App() {
               {showTimeFilterDetails && (
                 <div className="transactions-section" style={{ marginTop: '24px' }}>
                   <TransactionsTable
+                    listLoading={listLoading}
+                    listError={listError}
+                    listNotice={listNotice}
                     transactions={filteredTransactions}
-                    onReload={() => window.location.reload()}
+                    onReload={loadTransactions}
                   />
                 </div>
               )}
@@ -439,7 +468,13 @@ function App() {
           {/* TAB 4: LỊCH SỬ GIAO DỊCH */}
           {activeTab === 'history' && (
             <div className="transactions-section">
-              <TransactionsTable transactions={filteredTransactions} onReload={() => window.location.reload()} />
+              <TransactionsTable
+                listLoading={listLoading}
+                listError={listError}
+                listNotice={listNotice}
+                transactions={filteredTransactions}
+                onReload={loadTransactions}
+              />
             </div>
           )}
 
