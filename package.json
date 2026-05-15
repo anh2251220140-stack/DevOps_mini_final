@@ -1,0 +1,19 @@
+{
+  "name": "baitong",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-all.mjs",
+    "dev:frontend": "npm --prefix Frontend run dev",
+    "dev:backend": "npm --prefix Backend run dev",
+    "install:all": "npm --prefix Frontend install && npm --prefix Backend install",
+    "build": "npm --prefix Frontend run build && npm --prefix Backend run build",
+    "test": "pytest test/regression test/incidents -v",
+    "test:quick": "pytest test/regression/test_api_health.py test/regression/test_frontend_runtime.py -v",
+    "test:verify": "pytest test/regression test/incidents -v",
+    "test:incident:01": "pytest test/incidents/test_incident_01_frontend_env.py -v",
+    "test:incident:02": "pytest test/incidents/test_incident_02_backend_cors.py -v",
+    "test:incident:03": "pytest test/incidents/test_incident_03_validation_status.py -v"
+  }
+}

@@ -1,0 +1,63 @@
+PARAGRAPHS 76
+P1 [Normal]: KIỂM THỬ VÀ XỬ LÝ SỰ CỐ HỆ THỐNG (INCIDENT REPORT)
+P2 [Normal (Web)]: INCIDENT 01: API TRANSACTION BÁO LỖI 500 DO THIẾU CẤU HÌNH DATABASE
+P3 [Normal (Web)]: Báo cáo nhận được:
+P4 [Normal (Web)]: Giao diện danh sách chi tiêu xoay vòng mãi không load dữ liệu, kiểm tra tab Network thấy /api/transactions báo lỗi 500
+P5 [Normal]: Setup: Xóa/Để trống các biến SUPABASE_URL, SUPABASE_ANON_KEY trong file .env->rightarrow-> Docker rebuild/Redeploy.
+P7 [Normal]: lỗi API 500 do sập Database
+P8 [Normal (Web)]: Quy trình xử lý:
+P9 [Normal (Web)]: Kiểm tra /api/health ->Trạng thái vẫn OK (Server vẫn sống).
+P10 [Normal (Web)]: Kiểm tra /api/transactions ->Nhận HTTP status 500 và lỗi "Thiếu cấu hình Supabase".
+P11 [Normal (Web)]: Xác định layer: Tầng External Service (Dữ liệu ngoài) do chưa cấu hình chìa khóa kết nối.
+P12 [Normal (Web)]: Kiểm tra log Backend (docker logs ...) ->Xác nhận code bị chặn tại luồng kiểm tra biến môi trường.
+P13 [Normal (Web)]: Thực hiện fix: Viết cơ chế Fallback (trả về Mock Data nếu thiếu config), build lại container và verify.
+P14 [Normal]: Kết quả mong đợi sau fix: /api/transactions trả về JSON array (dữ liệu mẫu) với mã 200.
+P15 [Normal]: Bài học: Cần phân biệt "lỗi logic" và "lỗi thiếu tài nguyên bên ngoài". Luôn phải có cơ chế dự phòng (Fallback) để đảm bảo UI không bị treo khi Database gặp sự cố.
+P17 [Normal]: Cách phòng tránh:
+P18 [Normal]: Strict Env Validation: Kiểm tra sự tồn tại của các Key kết nối ngay khi khởi tạo Server.
+P19 [Normal]: Graceful Degradation: Thiết lập cơ chế trả về dữ liệu mẫu (Mock Data) khi kết nối Database bị gián đoạn để duy trì tính sẵn sàng của UI.
+P20 [Normal]: Docker Healthcheck: Ràng buộc sự phụ thuộc giữa Backend và Database để tránh lỗi kết nối trong quá trình khởi động container.
+P22 [Normal]: INCIDENT 02: LỖI TRUY CẬP CHÉO (CORS POLICY) KHIẾN WEB KHÔNG HIỆN DỮ LIỆU
+P23 [Normal]: Báo cáo nhận được:
+P24 [Normal]: "Giao diện vẫn hiển thị khung nhưng các con số tổng chi tiêu đều là 0đ. Kiểm tra tab Console thấy thông báo lỗi đỏ rực 'blocked by CORS policy'.
+P25 [Normal]: Setup: Vào file khởi tạo Backend (index.js/app.js) -> Comment (khóa) dòng app.use(cors())->Restart container Backend.
+P27 [Normal (Web)]: Kết quả mong đợi sau fix: Các yêu cầu API trả về Status 200 kèm theo Header bảo mật hợp lệ. Dữ liệu hiển thị đúng trên UI.
+P28 [Normal (Web)]: Bài học: Trình duyệt mặc định chặn truy cập chéo để bảo vệ người dùng. Khi làm hệ thống phân tách Frontend (8080) và Backend (3000), cấu hình CORS là bước bắt buộc.
+P29 [Normal]: Quy trình xử lý:
+P30 [Normal]: Kiểm tra Console (F12) ->Thấy lỗi: “Response to preflight request doesn't pass access control check”.
+P31 [Normal]: Xác định layer: Tầng Network / API Layer (Giao thức trao đổi giữa hai dịch vụ).
+P32 [Normal]: Sử dụng Automation Test (test_api.py) ->Xác nhận mã lỗi AssertionError do thiếu Header Access-Control-Allow-Origin.
+P33 [Normal]: Vào mã nguồn Backend ->Mở lại dòng lệnh app.use(cors()) để cấp phép cho các Origin khác truy cập.
+P34 [Normal]: Redeploy & Verify: Restart container, kiểm tra lại trình duyệt thấy dữ liệu đã nhảy số và Console sạch lỗi.
+P38 [Normal]: Cách phòng tránh (Prevention):
+P39 [Normal]: Cấu hình Whitelist: Không sử dụng * (cho phép tất cả), mà hãy cấu hình danh sách các Domain/IP tin cậy được phép truy cập để đảm bảo an toàn.
+P40 [Normal]: Quản lý qua ENV: Sử dụng biến môi trường để bật/tắt hoặc thay đổi các domain được phép truy cập theo từng môi trường (Dev/Staging/Prod).
+P41 [Normal]: Sử dụng Proxy: Trong môi trường phát triển, có thể cấu hình Proxy (Vite Proxy) để Frontend gọi API như cùng một Origin, tránh phát sinh lỗi CORS ngay từ đầu
+P43 [Normal]: INCIDENT 03: LỖI SẬP GIAO DIỆN (WHITE SCREEN) DO DỮ LIỆU API TRẢ VỀ NULL
+P44 [Normal]: Hiện Tượng
+P45 [Normal]: Người dùng truy cập vào trang Web nhưng chỉ thấy màn hình trắng xóa (White Screen of Death).
+P46 [Normal]: Các chức năng như tính tổng tiền hay danh sách chi tiêu không hiển thị.
+P47 [Normal]: Khi mở Công cụ nhà phát triển (F12 -> Console), xuất hiện thông báo lỗi đỏ:
+P48 [Normal]: TypeError: Cannot read properties of null (reading 'map') hoặc reading 'reduce'.
+P51 [Normal]: Tên sự cố: Lỗi sập giao diện người dùng (UI Crash) do phản hồi API không hợp lệ.
+P52 [Normal]: Layer: L4 - Frontend Layer
+P53 [Normal]: Nguyên nhân gốc rễ:
+P54 [animating]: Về phía Backend: Trong file route.js, khi cấu hình Supabase bị thiếu hoặc lỗi, hệ thống thay vì trả về một mảng rỗng [], lại trả về giá trị null (biến mockTransactions = null).
+P55 [animating]: Về phía Frontend: Trong file App.jsx, các hàm xử lý dữ liệu như .map() (để hiển thị bảng) và .reduce() (để tính tổng tiền) chỉ hoạt động trên kiểu dữ liệu Mảng (Array). Khi nhận về giá trị null, các hàm này không thể thực thi, dẫn đến lỗi Runtime làm sập toàn bộ ứng dụng React.
+P57 [Normal]: Minh chứng kỹ thuật: Console báo lỗi Cannot read properties of null (reading 'map')
+P58 [Normal]: Code test
+P60 [Normal]: Kiểm thử tự động phát hiện lỗi cấu hình dữ liệu
+P62 [Normal]: Hệ thống đã phục hồi sau khi chuẩn hóa API
+P63 [Normal]: Phương pháp kiểm thử: Sử dụng Black-box Testing kết hợp với Automation Script (Pytest).
+P64 [Normal]: -Cách fix (Solution)
+P65 [animating]: Cách 1 (Backend - Ưu tiên): Đảm bảo API luôn trả về đúng kiểu dữ liệu cam kết. Sửa mockTransactions = null thành mockTransactions = [].
+P66 [animating]: Cách 2 (Frontend): Thêm cơ chế kiểm tra dữ liệu (Null check) trước khi xử lý:
+P67 [animating]: Sử dụng Optional Chaining (?.) và giá trị mặc định (|| [])
+P68 [animating]: const data = (await response.json()) || [];
+P69 [animating]: setTransactions(data);
+P70 [animating]: Cách phòng tránh (Prevention)
+P71 [animating]: Sử dụng TypeScript: Chuyển đổi dự án sang TypeScript để ép kiểu dữ liệu ngay từ lúc viết code, tránh việc gọi hàm trên các biến có nguy cơ bị null/undefined.
+P72 [animating]: Triển khai Error Boundary: Sử dụng component "Rào chắn lỗi" trong React để bao bọc ứng dụng. Nếu một phần UI bị sập, hệ thống sẽ hiện thông báo lỗi thân thiện thay vì trắng màn hình.
+P73 [animating]: Viết Automation Test: Duy trì file test_frontend_logic.py để kiểm tra cấu trúc API (isinstance(data, list)) trước khi Deploy. Nếu API trả về sai kiểu dữ liệu, hệ thống CI/CD sẽ chặn lại ngay lập tức.
+P74 [animating]: Defensive Programming (Lập trình phòng thủ): Luôn giả định dữ liệu từ Database có thể bị lỗi/trống để viết code xử lý ngoại lệ.
+TABLES 0
